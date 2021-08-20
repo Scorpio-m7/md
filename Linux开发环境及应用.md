@@ -154,7 +154,7 @@ int main(void)
 }
 ```
 
-## shell的基本进制
+## shell的基本机制
 
 ### shell的种类
 
@@ -176,7 +176,6 @@ int main(void)
 - shell编程风格和c语言等算法语言的区别
 - shell是面向命令处理的语言，提供的流程控制结构通过对一些内部命令的解释实现
 - shell设计精炼，但是提供灵活机制（策略与机制相分离）。提供shell替换实现，例如：流程控制所需的条件判断，四则运算，都由shell之外的命令完成
-
 - 重定向与管道
 - 方便交互使用的功能：历史替换与别名替换
 - shell变量
@@ -184,3 +183,80 @@ int main(void)
 - 元字符，如：单双引号
 - 流程控制
 - 子程序
+
+### 启动bash
+
+- 注册shell
+- 交互式shell（键入bash命令）
+- 脚本解释器
+
+**自动执行的一批命令 （用户偏好）**
+
+- 当bash作为注册shell被启动时，自动执行用户主目录下的.bash_profile文件中命令，~/.bash_profile或$HOME/.bash_profile，umask之类的命令应当在.bash_profile文件中
+- 当bash作为注册shell被退出时，自动执行$HOME/.bash_logout
+- 当bash作为交互式shell启动时，自动执行$HOME/.bashrc
+
+**自动执行的一批命令（系统级，比用户级高）**
+
+当bash作为注册shell启动时，自动执行/etc/profile文件中命令
+
+当bash作为交互式shell启动时，自动执行/etc/bash.bashrc
+
+当bash作为注册shell退出时，自动执行/etc/bash.bash.logout
+
+### 脚本文件
+
+三种方法都启动/bin/bash，新创建子进程，并在子进程中执行脚本
+
+- bash<lsdir（无法携带参数）
+
+- bash lsdir
+
+  bash -x lsdir
+
+  bash lsdir /usr/lib/gcc
+
+- chmod u+x lsdir
+
+  ./lsdir /usr/lib/gcc
+
+在当前shell中执行脚本（会修改当前bash的路径）
+
+- . lsdir /usr/lib/gcc
+- source lsdir /usr/lib/gcc
+
+```sh
+#lsdir
+if [ $# = 0 ]
+then
+	dir=.
+else
+	dir=$1
+fi
+find $dir -type d -print
+echo '-----------'
+cd $dir
+pwd
+```
+
+### 历史表
+
+先前键入的命令存于历史表，编号递增，FIFO刷新。表大小由变量HISTSIZE设定，修改HISTSIZE的配置应放入~/.bashrc
+
+history查看历史表($HOME/.bash_history)
+
+- 上下键替换命令
+- !! 引用上一条命令
+- !str 以str开头的最近用过的命令，如:!v
+
+### 别名替换
+
+在别名表中增加一个别名，应把alias命令放入.bashrc
+
+```bash
+alias dir="ls -flad"
+```
+
+### TAB键补全
+
+首个单词TAB建补全搜索$PATH下的命令，其他单词搜索当前目录下文件
