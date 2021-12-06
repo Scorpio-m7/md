@@ -113,7 +113,7 @@ Service也是 android 系统中的一种组件 它跟 Activity 的级别差不�
 - tcpdump-tcp-数据抓包工具
 - Xposed-android-hook-框架
 - Frida-跨平台-hook-框架
-- JustTrustMe-xposed-框架下信任所有证书的插件实现
+- JustTrustMe-xposed-框架下信任所有证书的插件实现，用来禁止SSL证书验证
 - Burpsuite-基于代理实现的抓包和分析-工具
 - IDA-二进制逆向工具和调试工具
 
@@ -146,6 +146,10 @@ Https证书 绑定指客户端在代码内部校验了服务器证书，当发�
 部分客户端与服务器交互的数据经过加密处理，导致渗透测试人员无法开展测试工作，这种情况有两种结局方案。第一，可以逆向加密算法，然后在 burp 中开发一个解密插件。第二可以尝试使用 hook 框架 hook 加密函数，拿到明文，然后与 burp 进行交互。
 
 ## 脱壳
+
+### 查壳
+
+ApkScan-PKID查壳工具
 
 ### 如何进行脱壳
 
