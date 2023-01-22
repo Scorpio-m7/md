@@ -1,4 +1,4 @@
-# Linux命令风格；文件系统
+# 文件系统
 
 ## 系统调用
 
@@ -260,3 +260,38 @@ alias dir="ls -flad"
 ### TAB键补全
 
 首个单词TAB建补全搜索$PATH下的命令，其他单词搜索当前目录下文件
+
+### 输入重定向
+
+- <filename:从文件中获取stdin，例如：sort<1.txt
+
+- <<word:从shell脚本文件获取数据直到遇到定界符word，如脚本word.sh：
+
+  ```sh
+  cat << word
+  * now : `date`
+  * my home directory is $HOME
+  word
+  pwd
+  ```
+
+  定界符中的内容需要加工替换，date会打印当前时间。程序运行结果如下：
+
+  ```bash
+  root@ubuntu:~/Desktop# ./word.sh
+  * now : Sat Jan 21 22:35:26 PST 2023
+  * my home directory is /root
+  /root/Desktop
+  ```
+
+  如果不想定界符中的内容发生替换，将脚本改成：
+
+  ```sh
+  cat << 'word'
+  * now : `date`
+  * my home directory is $HOME
+  word
+  pwd
+  ```
+
+- base64 <<< test:将test字符串作为输入就行base64编码后输出
